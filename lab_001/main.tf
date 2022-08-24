@@ -117,3 +117,7 @@ resource "aws_instance" "instance_public_inst_2" {
   vpc_security_group_ids = [aws_security_group.security_group_dev-sg.id]
   tags                   = var.instance2-tag
 }
+
+output "instance-public-name-01" {
+  value = (trimsuffix(aws_instance.instance_public_inst_1.public_dns, ".amazonaws.com"))
+}
