@@ -15,58 +15,46 @@ provider "aws" {
 
 # Creating VPC,name, CIDR and Tags
 resource "aws_vpc" "vpc_dev" {
-  cidr_block           = "10.0.0.0/16"
-  instance_tenancy     = "default"
-  enable_dns_support   = "true"
-  enable_dns_hostnames = "true"
-  tags = {
-    Name = "dev"
-  }
+  cidr_block           = var.cidr_block
+  instance_tenancy     = var.instance_tenancy
+  enable_dns_support   = var.enable_dns_support
+  enable_dns_hostnames = var.enable_dns_hostnames
+  tags                 = var.vpc-tags
 }
 
 # Creating Public Subnets in VPC
 resource "aws_subnet" "subnet_public_01" {
   vpc_id                  = aws_vpc.vpc_dev.id
-  cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = "true"
-  availability_zone       = "us-east-1a"
-
-  tags = {
-    Name = "dev-public-1"
-  }
+  cidr_block              = var.subnet1_cidr_block
+  map_public_ip_on_launch = var.map_public_ip_on_launch
+  availability_zone       = var.subnet1-AZ
+  tags                    = var.subnet1-tags
 }
 
 resource "aws_subnet" "subnet_public_02" {
   vpc_id                  = aws_vpc.vpc_dev.id
-  cidr_block              = "10.0.2.0/24"
-  map_public_ip_on_launch = "true"
-  availability_zone       = "us-east-1b"
+  cidr_block              = var.subnet2_cidr_block
+  map_public_ip_on_launch = var.map_public_ip_on_launch
+  availability_zone       = var.subnet1-AZ
 
-  tags = {
-    Name = "dev-public-2"
-  }
+  tags = var.subnet2-tags
 }
 
 # Creating Internet Gateway in AWS VPC
 resource "aws_internet_gateway" "internet_gateway_dev" {
   vpc_id                  = aws_vpc.vpc_dev.id
-  
-  tags = {
-    Name = "dev"
-  }
+  tags = var.IG-tags
 }
 
 #Creating Route Table for Internet Gateway
 resource "aws_route_table" "route_table_dev-public" {
   vpc_id                  = aws_vpc.vpc_dev.id
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = var.IG_cidr_block
     gateway_id = aws_internet_gateway.internet_gateway_dev.id
   }
 
-  tags = {
-    "Name" = "dev-public-1"
-  }
+  tags = var.IG-tags
 
 }
 
@@ -84,7 +72,7 @@ resource "aws_route_table_association" "route_table_association_dev-public-02" {
 
 #Creating Security Group for ec2-instance
 resource "aws_security_group" "security_group_dev-sg" {
-  name   = "dev-sg"
+  name   = var.security_group_dev-sg-name
   vpc_id = aws_vpc.vpc_dev.id
   #Incoming traffic
   ingress {
@@ -109,29 +97,23 @@ resource "aws_security_group" "security_group_dev-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "dev-sg"
-  }
+  tags = var.sg-tags
 
 }
 
 # Creating EC2 instances in public subnets
 resource "aws_instance" "instance_public_inst_1" {
-  ami                    = "ami-090fa75af13c156b4"
-  instance_type          = "t2.micro"
+  ami                    = var.instance_ami
+  instance_type          = var.instance_type
   subnet_id              = aws_subnet.subnet_public_01.id
   vpc_security_group_ids = [aws_security_group.security_group_dev-sg.id]
-  tags = {
-    Name = "public_inst_1"
-  }
+  tags                   = var.instance-tags
 }
 
 resource "aws_instance" "instance_public_inst_2" {
-  ami                    = "ami-090fa75af13c156b4"
-  instance_type          = "t2.micro"
+  ami                    = var.instance_ami
+  instance_type          = var.instance_type
   subnet_id              = aws_subnet.subnet_public_02.id
   vpc_security_group_ids = [aws_security_group.security_group_dev-sg.id]
-  tags = {
-    Name = "public_inst_2"
-  }
+  tags                   = var.instance2-tag
 }
